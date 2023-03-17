@@ -85,8 +85,14 @@ bool PowerManagement::isCharging() {
   return axp.isChargeing();
 }
 
-// cppcheck-suppress unusedFunction
 void PowerManagement::enCharging(bool bChrg) {
   axp.enableChargeing(bChrg);
 }
 
+double PowerManagement::getBatteryCoulomb() {
+  return axp.getCoulombData();
+}
+
+void PowerManagement::clearCoulomb(){
+  axp.ClearCoulombcounter();
+}

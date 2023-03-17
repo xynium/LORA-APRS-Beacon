@@ -11,8 +11,6 @@
 #include "pins.h"
 #include "power_management.h"
 
-#define VERSION "1.0"
-
 // State of State machine
 #define HasSynchGPS 1
 #define PrepBeacon  2
@@ -45,49 +43,41 @@ void setup() {
   // make sure wifi and bt is off as we don't need it:
   WiFi.mode(WIFI_OFF);
   btStop();
-
   setup_display();
-  show_display("OE5BPA", "LoRa APRS Tracker", "by Peter Buchegger", "Version: " VERSION, 2000);
   load_config();
-
   setup_gps();
   setup_lora();
-  // userButton.attachClick(handle_tx_click); // attach TX action to user button (defined by BUTTON_PIN)
-  //  userButton.attachLongPressStart(handle_next_beacon);
-  //  userButton.attachDoubleClick(toggle_display);
+  powerManagement.clearCoulomb(); // Todo get when on usb stop charging for clear
+  // userButton.attachClick(handle_click); // todo
+  //  userButton.attachLongPressStart(handle_longPress);
+  //  userButton.attachDoubleClick(handle_dblClk);
   esp_sleep_enable_timer_wakeup(mConfig.beacon.smart_beacon.slow_rate * 1000000);
-  Serial.println("HI");
-  String sM = String("Sleep for : ") + String(mConfig.beacon.smart_beacon.slow_rate, DEC) + String("s");
-  Serial.println(sM);
-  Serial.println("GO...");
-  delay(1000);
+  String sM = String("Beacon period: ") + String(mConfig.beacon.smart_beacon.slow_rate, DEC) + String("s");
+  show_display("GO...", "", sM, "wait for position...", 1000);
 }
 
 void loop() {
   static unsigned int rate_limit_message_text = 0;
-  static int          speed_zero_sent         = 0;
-  static String       batteryVoltage          = "";
-  static String       batteryChargeCurrent    = "";
+  String              batteryVoltage          = "";
+  String              batteryChargeCurrent    = "";
+  String              batteryCoulomb          = "";
   APRSMessage         msg;
   String              lat;
   String              lng;
   String              aprsmsg;
   static int          iState;
 
-  userButton.tick();
-
+  // userButton.tick();  TODO
   switch (iState) {
   case HasSynchGPS: {
     while (ss.available() > 0) {
       char c = ss.read();
       gps.encode(c);
     }
-
     if (gps.time.isValid()) {
       setTime(gps.time.hour(), gps.time.minute(), gps.time.second(), gps.date.day(), gps.date.month(), gps.date.year());
-      // Serial.println("GPS time ok");
+      // Serial.println("GPS time  ok");
     }
-
     if (gps.location.isValid()) {
       Serial.println("GPS pos ok");
       iState = PrepBeacon;
@@ -97,21 +87,21 @@ void loop() {
     } else {
       powerManagement.disableChgLed();
     }
-    delay(20);
+    delay(2);
     break;
   }
 
   case PrepBeacon: {
     if (powerManagement.isBatteryConnect()) {
-      batteryVoltage       = String(powerManagement.getBatteryVoltage(), 2);
-      batteryChargeCurrent = String(powerManagement.getBatteryChargeDischargeCurrent(), 0);
+      batteryVoltage       = String(powerManagement.getBatteryVoltage(), 2) + "V";
+      batteryChargeCurrent = String(powerManagement.getBatteryChargeDischargeCurrent(), 0) + "mA";
+      batteryCoulomb       = String(powerManagement.getBatteryCoulomb(), 2) + "mAH";
     }
     msg.setSource(mConfig.beacon.callsign);
     msg.setPath(mConfig.beacon.path);
-    msg.setDestination("APLT00");
-    lat = create_lat_aprs(gps.location.rawLat());
-    lng = create_long_aprs(gps.location.rawLng());
-
+    msg.setDestination("APLORA");
+    lat            = create_lat_aprs(gps.location.rawLat());
+    lng            = create_long_aprs(gps.location.rawLng());
     String alt     = "";
     int    alt_int = max(-99999, min(999999, (int)gps.altitude.feet()));
     if (alt_int < 0) {
@@ -119,51 +109,25 @@ void loop() {
     } else {
       alt = "/A=" + padding(alt_int, 6);
     }
-
-    String course_and_speed = "";
-    int    speed_int        = max(0, min(999, (int)gps.speed.knots()));
-    if (speed_zero_sent < 3) {
-      String speed      = padding(speed_int, 3);
-      int    course_int = max(0, min(360, (int)gps.course.deg()));
-      /* course in between 1..360 due to aprs spec */
-      if (course_int == 0) {
-        course_int = 360;
-      }
-      String course    = padding(course_int, 3);
-      course_and_speed = course + "/" + speed;
+    int    speed_int  = max(0, min(999, (int)gps.speed.knots()));
+    String speed      = padding(speed_int, 3);
+    int    course_int = max(0, min(360, (int)gps.course.deg()));
+    /* course in between 1..360 due to aprs spec */
+    if (course_int == 0) {
+      course_int = 360;
     }
-    if (speed_int == 0) {
-      /* speed is 0.
-         we send 3 packets with speed zero (so our friends know we stand still).
-         After that, we save airtime by not sending speed/course 000/000.
-         Btw, even if speed we really do not move, measured course is changeing
-         (-> no useful / even wrong info)
-      */
-      if (speed_zero_sent < 3) {
-        speed_zero_sent += 1;
-      }
-    } else {
-      speed_zero_sent = 0;
-    }
-
-    aprsmsg = "!" + lat + mConfig.beacon.overlay + lng + mConfig.beacon.symbol + course_and_speed + alt;
-    // message_text every 10's packet (i.e. if we have beacon rate 1min at high
-    // speed -> every 10min). May be enforced above (at expirey of smart beacon
-    // rate (i.e. every 30min), or every third packet on static rate (i.e.
-    // static rate 10 -> every third packet)
-    if (!(rate_limit_message_text++ % 10)) {
+    String course = padding(course_int, 3);
+    aprsmsg       = "!" + lat + mConfig.beacon.overlay + lng + mConfig.beacon.symbol + course + "/" + speed + alt;
+    if (!(rate_limit_message_text++ % 4)) { // Comment rate one every N beacon
       aprsmsg += mConfig.beacon.message;
     }
-
     if (!powerManagement.isCharging()) {
-      aprsmsg += "VBat= " + batteryVoltage + "V Cur= " + batteryChargeCurrent + "mA";
+      aprsmsg += "VBat= " + batteryVoltage + "Cur= " + batteryChargeCurrent;
     }
-
     msg.getBody()->setData(aprsmsg);
     String data = msg.encode();
-    // show_display("<< TX >>", data);
-    Serial.println("TX ok");
-    // delay(1000);
+    // Serial.println("TX ok");
+    show_display(mConfig.beacon.callsign, createDateString(now()) + "   " + createTimeString(now()), String("Sats: ") + gps.satellites.value() + " HDOP: " + gps.hdop.hdop(), !powerManagement.isCharging() ? (String("Bat:") + batteryVoltage + ", " + batteryCoulomb) : "Powered via USB", 100);
     if (mConfig.ptt.active) {
       digitalWrite(mConfig.ptt.io_pin, mConfig.ptt.reverse ? LOW : HIGH);
       delay(mConfig.ptt.start_delay);
@@ -174,22 +138,19 @@ void loop() {
     LoRa.write(0x01);
     LoRa.write((const uint8_t *)data.c_str(), data.length());
     LoRa.endPacket();
-
-    show_display(mConfig.beacon.callsign, createDateString(now()) + "   " + createTimeString(now()), String("Sats: ") + gps.satellites.value() + " HDOP: " + gps.hdop.hdop(), !powerManagement.isCharging() ? (String("Bat: ") + batteryVoltage + "V, " + batteryChargeCurrent + "mA") : "Powered via USB");
-
     if (mConfig.ptt.active) {
       delay(mConfig.ptt.end_delay);
       digitalWrite(mConfig.ptt.io_pin, mConfig.ptt.reverse ? HIGH : LOW);
     }
-
     iState = Sleep;
     break;
   }
   case Sleep: {
     powerManagement.deactivateGPS();
-    Serial.flush();
+    // Serial.flush();
     esp_light_sleep_start();
-    Serial.println("wake up");
+    // Serial.println("wake up");
+    show_display("WOKE UP", "   ", "wait for position...", 100);
     powerManagement.activateGPS();
     iState = HasSynchGPS;
     break;
@@ -202,11 +163,10 @@ void loop() {
 }
 
 void load_config() {
-  ConfigurationManagement confmg("/tracker.json");
+  ConfigurationManagement confmg("/beacon.json");
   mConfig = confmg.readConfiguration();
   if (mConfig.beacon.callsign == "NOCALL-7") {
-    show_display("ERROR", "You have to change your settings in 'data/tracker.json' and "
-                          "upload it via \"Upload File System image\"!");
+    show_display("ERROR", "You have to change your settings in 'data/tracker.json' and ", "upload it via \"Upload File System image\"!");
     while (true) {
     }
   }
@@ -231,34 +191,12 @@ void setup_gps() {
   ss.begin(9600, SERIAL_8N1, GPS_TX, GPS_RX);
 }
 
-char *s_min_nn(uint32_t min_nnnnn, int high_precision) {
-  /* min_nnnnn: RawDegrees billionths is uint32_t by definition and is n'telth
-   * degree (-> *= 6 -> nn.mmmmmm minutes) high_precision: 0: round at decimal
-   * position 2. 1: round at decimal position 4. 2: return decimal position 3-4
-   * as base91 encoded char
-   */
-
-  static char buf[6];
-  min_nnnnn = min_nnnnn * 0.006;
-
-  if (high_precision) {
-    if ((min_nnnnn % 10) >= 5 && min_nnnnn < 6000000 - 5) {
-      // round up. Avoid overflow (59.999999 should never become 60.0 or more)
-      min_nnnnn = min_nnnnn + 5;
-    }
-  } else {
-    if ((min_nnnnn % 1000) >= 500 && min_nnnnn < (6000000 - 500)) {
-      // round up. Avoid overflow (59.9999 should never become 60.0 or more)
-      min_nnnnn = min_nnnnn + 500;
-    }
-  }
-
-  if (high_precision < 2)
-    sprintf(buf, "%02u.%02u", (unsigned int)((min_nnnnn / 100000) % 100), (unsigned int)((min_nnnnn / 1000) % 100));
-  else
-    sprintf(buf, "%c", (char)((min_nnnnn % 1000) / 11) + 33);
-  // Like to verify? type in python for i.e. RawDegrees billions 566688333: i =
-  // 566688333; "%c" % (int(((i*.0006+0.5) % 100)/1.1) +33)
+char *s_min_nn(uint32_t min_nnnnn, int precision) {
+  static char buf[8];
+  double dMin = min_nnnnn * 6e-8;
+  sprintf(buf, "%07.4f", dMin);
+  buf[3 + precision] = 0;
+  Serial.println(buf);
   return buf;
 }
 
@@ -268,10 +206,7 @@ String create_lat_aprs(RawDegrees lat) {
   if (lat.negative) {
     n_s = 'S';
   }
-  // we like sprintf's float up-rounding.
-  // but sprintf % may round to 60.00 -> 5360.00 (53° 60min is a wrong notation
-  // ;)
-  sprintf(str, "%02d%s%c", lat.deg, s_min_nn(lat.billionths, 0), n_s);
+  sprintf(str, "%02d%s%c", lat.deg, s_min_nn(lat.billionths, mConfig.beacon.positiondilution), n_s);
   String lat_str(str);
   return lat_str;
 }
@@ -282,7 +217,7 @@ String create_long_aprs(RawDegrees lng) {
   if (lng.negative) {
     e_w = 'W';
   }
-  sprintf(str, "%03d%s%c", lng.deg, s_min_nn(lng.billionths, 0), e_w);
+  sprintf(str, "%03d%s%c", lng.deg, s_min_nn(lng.billionths, mConfig.beacon.positiondilution), e_w);
   String lng_str(str);
   return lng_str;
 }

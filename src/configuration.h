@@ -25,7 +25,7 @@ public:
       int  min_bcn;
     };
 
-    Beacon() : callsign("NOCALL-10"), path("WIDE1-1"), message("LoRa Tracker"), timeout(1), symbol("["), overlay("/"), enhance_precision(true) {
+    Beacon() : callsign("NOCALL-7"), path("WIDE1-1"), message("LoRa Beacon"), timeout(1), symbol("["), overlay("/"), positiondilution(1) {
     }
 
     String       callsign;
@@ -35,7 +35,7 @@ public:
     String       symbol;
     String       overlay;
     Smart_Beacon smart_beacon;
-    bool         enhance_precision;
+    int         positiondilution;
   };
 
   class LoRa {
@@ -75,20 +75,18 @@ public:
   Configuration() : debug(false) {
   }
 
-  bool              debug;
+  bool   debug;
   Beacon beacon;
-  LoRa              lora;
-  PTT               ptt;
-  Button            button;
+  LoRa   lora;
+  PTT    ptt;
+  Button button;
 };
 
 class ConfigurationManagement {
 public:
   explicit ConfigurationManagement(String FilePath);
-
   Configuration readConfiguration();
-  void          writeConfiguration(Configuration conf);
-
+  
 private:
   const String mFilePath;
 };

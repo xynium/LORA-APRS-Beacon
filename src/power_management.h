@@ -26,6 +26,8 @@ public:
 
   double getBatteryVoltage();
   double getBatteryChargeDischargeCurrent();
+  double getBatteryCoulomb();
+  void clearCoulomb();
 
   bool isBatteryConnect();
   bool isCharging();
