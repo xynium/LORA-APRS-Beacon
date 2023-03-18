@@ -1,7 +1,7 @@
 {
 	"debug": false,
 	"beacon": {
-		"callsign": "F4EYU-7",
+		"callsign": "NOCALL-7",
 		"path": "WIDE2-2",
 		"message": "F4EYU LoRa",
 		"timeout": 1,
@@ -17,7 +17,7 @@
 			"min_tx_dist": 100,
 			"min_bcn": 5
 		},
-		"positiondilution": 1
+		"positiondilution": 2
 	},
 	"button": {
 		"tx": true,
