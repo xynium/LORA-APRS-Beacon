@@ -1,7 +1,7 @@
 {
 	"debug": false,
 	"beacon": {
-		"callsign": "NOCALL-7",
+		"callsign": "F4EYU-7",
 		"path": "WIDE2-2",
 		"message": "F4EYU LoRa",
 		"timeout": 1,
@@ -9,15 +9,12 @@
 		"overlay": "/",
 		"smart_beacon": {
 			"active": false,
-			"turn_min": 25,
-			"slow_rate": 120,
-			"slow_speed": 10,
-			"fast_rate": 10,
-			"fast_speed": 100,
-			"min_tx_dist": 100,
-			"min_bcn": 5
+			"slow_rate": 1500,
+			"slow_speed": 2,
+			"fast_rate": 100,
+			"fast_speed": 100			
 		},
-		"positiondilution": 2
+		"positiondilution": 1
 	},
 	"button": {
 		"tx": true,
