@@ -208,9 +208,9 @@ char *s_min_nn(uint32_t min_nnnnn, int precision) {
   static char buf[8];
   double      dMin = min_nnnnn * 6e-8;
   sprintf(buf, "%07.4f", dMin);
-  for (int it = (3 + precision); it < 7; it++)
+  for (int it = (3 + precision); it < 5; it++)
     buf[it] = '0';
-  buf[7] = 0;
+  buf[5] = 0;
   return buf;
 }
 
