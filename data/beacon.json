@@ -17,7 +17,7 @@
 			"min_tx_dist": 100,
 			"min_bcn": 5
 		},
-		"positiondilution": 2
+		"positiondilution": 1
 	},
 	"button": {
 		"tx": true,
