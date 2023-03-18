@@ -1,8 +1,12 @@
 # LoRa APRS Beacon
 
-for TTGO T-Beam V1 (433MHz SX1278)
+for TTGO T-Beam V1 (433MHz SX1278) fork from peterus repo.
 
 The goal is increase battery duration,
+
+left button reset
+right button long press to stop
+middle button force beacon
 
 ### How to compile
 
