@@ -31,13 +31,11 @@ void setup_display() {
   display.display();
 }
 
-// cppcheck-suppress unusedFunction
-void display_toggle(bool toggle) {
-  if (toggle) {
-    display.ssd1306_command(SSD1306_DISPLAYON);
-  } else {
-    display.ssd1306_command(SSD1306_DISPLAYOFF);
-  }
+void display_on(void) {
+  display.ssd1306_command(SSD1306_DISPLAYON);
+}
+void display_off(void) {
+  display.ssd1306_command(SSD1306_DISPLAYOFF);
 }
 
 // cppcheck-suppress unusedFunction

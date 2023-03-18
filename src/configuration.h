@@ -12,17 +12,13 @@ public:
   public:
     class Smart_Beacon {
     public:
-      Smart_Beacon() : active(false), turn_min(25), slow_rate(300), slow_speed(10), fast_rate(60), fast_speed(100), min_tx_dist(100), min_bcn(5) {
+      Smart_Beacon() : active(false), slow_rate(300), slow_speed(10), fast_rate(60), fast_speed(100) {
       }
-
       bool active;
-      int  turn_min;
       int  slow_rate;
       int  slow_speed;
       int  fast_rate;
       int  fast_speed;
-      int  min_tx_dist;
-      int  min_bcn;
     };
 
     Beacon() : callsign("NOCALL-7"), path("WIDE1-1"), message("LoRa Beacon"), timeout(1), symbol("["), overlay("/"), positiondilution(1) {
@@ -35,7 +31,7 @@ public:
     String       symbol;
     String       overlay;
     Smart_Beacon smart_beacon;
-    int         positiondilution;
+    int          positiondilution;
   };
 
   class LoRa {
@@ -86,7 +82,7 @@ class ConfigurationManagement {
 public:
   explicit ConfigurationManagement(String FilePath);
   Configuration readConfiguration();
-  
+
 private:
   const String mFilePath;
 };

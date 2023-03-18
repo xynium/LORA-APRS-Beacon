@@ -3,8 +3,8 @@
 #define DISPLAY_H_
 
 void setup_display();
-void display_toggle(bool toggle);
-
+void display_on(void);
+void display_off(void);
 void show_display(String header, int wait = 0);
 void show_display(String header, String line1, int wait = 0);
 void show_display(String header, String line1, String line2, int wait = 0);

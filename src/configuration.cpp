@@ -40,17 +40,14 @@ Configuration ConfigurationManagement::readConfiguration() {
   // conf.beacon.symbol = "[";
   conf.beacon.symbol = data["beacon"]["symbol"].as<String>();
   // conf.beacon.overlay ="/";
-  conf.beacon.overlay                  = data["beacon"]["overlay"].as<String>();
-  conf.beacon.smart_beacon.active      = data["beacon"]["smart_beacon"]["active"] | false;
-  conf.beacon.smart_beacon.turn_min    = data["beacon"]["smart_beacon"]["turn_min"] | 25;
-  conf.beacon.smart_beacon.slow_rate   = data["beacon"]["smart_beacon"]["slow_rate"] | 120;
-  conf.beacon.smart_beacon.slow_speed  = data["beacon"]["smart_beacon"]["slow_speed"] | 10;
-  conf.beacon.smart_beacon.fast_rate   = data["beacon"]["smart_beacon"]["fast_rate"] | 10;
-  conf.beacon.smart_beacon.fast_speed  = data["beacon"]["smart_beacon"]["fast_speed"] | 100;
-  conf.beacon.smart_beacon.min_tx_dist = data["beacon"]["smart_beacon"]["min_tx_dist"] | 100;
-  conf.beacon.smart_beacon.min_bcn     = data["beacon"]["smart_beacon"]["min_bcn"] | 5;
-  conf.beacon.positiondilution         = data["beacon"]["positiondilution"] | 1;
-
+  conf.beacon.positiondilution        = data["beacon"]["positiondilution"] | 1;
+  conf.beacon.overlay                 = data["beacon"]["overlay"].as<String>();
+  conf.beacon.smart_beacon.active     = data["beacon"]["smart_beacon"]["active"] | false;
+  conf.beacon.smart_beacon.slow_rate  = data["beacon"]["smart_beacon"]["slow_rate"] | 120;
+  conf.beacon.smart_beacon.slow_speed = data["beacon"]["smart_beacon"]["slow_speed"] | 10;
+  conf.beacon.smart_beacon.fast_rate  = data["beacon"]["smart_beacon"]["fast_rate"] | 10;
+  conf.beacon.smart_beacon.fast_speed = data["beacon"]["smart_beacon"]["fast_speed"] | 100;
+  
   conf.button.tx          = data["button"]["tx"] | false;
   conf.button.alt_message = data["button"]["alt_message"] | false;
 
@@ -70,4 +67,4 @@ Configuration ConfigurationManagement::readConfiguration() {
   return conf;
 }
 
-//END
+// END

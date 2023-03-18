@@ -64,6 +64,7 @@ void loop() {
   String              batteryChargeCurrent    = "";
   String              batteryCoulomb          = "";
   static int          iState;
+  static int          iDispSte;
 
   switch (iState) {
     case HasSynchGPS:
@@ -156,14 +157,25 @@ void loop() {
     case Sleep:
       {
         powerManagement.deactivateGPS();
+        if (iDispSte != 0) { // sinon display passe off trop vite
+          iDispSte = 0;
+          delay(4000);
+        }
+        display_off();
 #ifdef Debug
         Serial.flush();
 #endif
         digitalWrite(RED_LED, HIGH); // LedOFF
         esp_light_sleep_start();
-        show_display("WOKE UP", "   ", "wait for position...", 100);
+        if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_GPIO) {
+          show_display("AWAKE", "   ", "wait for position...", 100);
+          display_on();
+          iDispSte = 1;
+        }
         powerManagement.activateGPS();
+#ifdef Debug
         Serial.println("awake");
+#endif
         delay(500); // To get millis() change his value gps.time.age() on the old val
         iState = HasSynchGPS;
         break;
