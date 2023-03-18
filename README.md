@@ -8,6 +8,12 @@ left button reset
 right button long press to stop
 middle button force beacon
 
+Set your data in  data/beacon.json
+positiondilution is the number of decimal digit in latitude and longitude (1 or 2).
+
+TODO Smartbeaconning
+TODO reset coulomb counter for now it is reset at startup 
+
 ### How to compile
 
 The best success is to use PlatformIO (and it is the only platform where I can support you). 
@@ -19,7 +25,7 @@ The best success is to use PlatformIO (and it is the only platform where I can s
 
 ### Configuration
 
-* You can find all nessesary settings to change for your configuration in **data/tracker.json**.
+* You can find all nessesary settings to change for your configuration in **data/beacon.json**.
 * To upload it to your board you have to do this via **Upload File System image** in PlatformIO!
 * To find the 'Upload File System image' click the PlatformIO symbol (the little alien) on the left side, choos your configuration, click on 'Platform' and search for 'Upload File System image'.
 
